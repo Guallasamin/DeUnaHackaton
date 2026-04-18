@@ -14,8 +14,7 @@
  promedien 3.2 y con las demás métricas consistentes.
 
  Requisitos previos:
- - dim_merchants.csv (Tabla 1)
- - churn_labels.csv (etiqueta ground truth, se genera junto con Tabla 2)
+ - dim_merchants_con_abandono.csv (Tabla 1 + etiqueta)
  - fact_performance_monthly.csv (Tabla 2)
 
  Output: fact_support_tickets.csv
@@ -31,14 +30,6 @@ import pandas as pd
 from datetime import datetime, timedelta
 import hashlib
 import os
-import sys
-from pathlib import Path
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from config.settings import PATHS
 
 # ============================================================
 # 1. CONFIGURACIÓN
@@ -425,29 +416,21 @@ def validar_dataset(df_tickets: pd.DataFrame,
 
 if __name__ == "__main__":
     # 1. Cargar tablas previas
-    merchants_path = PATHS.RAW_DIR / "dim_merchants.csv"
-    labels_path = PATHS.RAW_DIR / "churn_labels.csv"
-    performance_path = PATHS.RAW_DIR / "fact_performance_monthly.csv"
+    if not os.path.exists("data/raw/dim_merchants_con_abandono.csv"):
+        raise FileNotFoundError(
+            "No se encuentra data/raw/dim_merchants_con_abandono.csv. "
+            "Ejecuta primero generar_fact_performance.py."
+        )
+    if not os.path.exists("data/raw/fact_performance_monthly.csv"):
+        raise FileNotFoundError(
+            "No se encuentra data/raw/fact_performance_monthly.csv. "
+            "Ejecuta primero generar_fact_performance.py."
+        )
 
-    for required in (merchants_path, labels_path, performance_path):
-        if not required.exists():
-            raise FileNotFoundError(
-                f"No se encuentra {required}. "
-                "Ejecuta primero generar_dim_merchants.py y generar_fact_performance.py."
-            )
-
-    df_merchants_base = pd.read_csv(merchants_path)
-    df_labels = pd.read_csv(labels_path)
-    df_performance = pd.read_csv(performance_path)
-
-    # El generador necesita la etiqueta para modular la severidad de tickets
-    # en churners — la unimos solo en memoria (no persistimos la mezcla).
-    df_merchants = df_merchants_base.merge(df_labels, on="merchant_id", how="left")
-    df_merchants["abandono_30d"] = df_merchants["abandono_30d"].fillna(0).astype(int)
-
-    print(f"✓ Cargado {merchants_path.name}:    {len(df_merchants_base):,} comercios")
-    print(f"✓ Cargado {labels_path.name}:       {df_labels['abandono_30d'].sum()} churners")
-    print(f"✓ Cargado {performance_path.name}:  {len(df_performance):,} filas\n")
+    df_merchants = pd.read_csv("data/raw/dim_merchants_con_abandono.csv")
+    df_performance = pd.read_csv("data/raw/fact_performance_monthly.csv")
+    print(f"✓ Cargado dim_merchants_con_abandono: {len(df_merchants):,} comercios")
+    print(f"✓ Cargado fact_performance_monthly:   {len(df_performance):,} filas\n")
 
     # 2. Generar Tabla 4
     print("Generando tickets de soporte individuales...")
@@ -458,16 +441,10 @@ if __name__ == "__main__":
     validar_dataset(df_tickets, df_performance, df_merchants)
 
     # 4. Guardar (sin la columna auxiliar mes_reporte que añadimos para validar)
-    output_dir = PATHS.RAW_DIR
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    tickets_csv_path = output_dir / "fact_support_tickets.csv"
-    tickets_parquet_path = output_dir / "fact_support_tickets.parquet"
-
     df_tickets_out = df_tickets.drop(columns=["mes_reporte"], errors="ignore")
-    df_tickets_out.to_csv(tickets_csv_path, index=False, encoding="utf-8")
+    df_tickets_out.to_csv("data/raw/fact_support_tickets.csv", index=False, encoding="utf-8")
     try:
-        df_tickets_out.to_parquet(tickets_parquet_path, index=False)
-        print(f"\n✓ Guardado: {tickets_csv_path.name} + parquet")
+        df_tickets_out.to_parquet("data/raw/fact_support_tickets.parquet", index=False)
+        print("\n✓ Guardado: data/raw/fact_support_tickets.csv + parquet")
     except Exception as e:
-        print(f"\n✓ Guardado: {tickets_csv_path.name} (parquet no disponible: {e})")
+        print(f"\n✓ Guardado: data/raw/fact_support_tickets.csv (parquet no disponible: {e})")

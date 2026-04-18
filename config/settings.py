@@ -72,14 +72,15 @@ TEST_SIZE = 0.20
 
 # Fecha de corte del modelo.
 #
-# El dataset sintético cubre 2025-04 a 2026-03. Los churners inician su
-# decaimiento entre los meses 7 y 9 (2025-10 a 2025-12). Si fijamos el corte
-# en el último mes disponible (2026-03) los churners ya están prácticamente
-# inactivos y el problema se trivializa.
+# El dataset cubre 2025-04 a 2026-03. El decaimiento de los churners empieza
+# entre noviembre 2025 y enero 2026 (3-5 meses de decay terminando en marzo 2026).
 #
-# Usamos 2026-01-01 como corte: ese es el momento en el que el decaimiento
-# recién empieza a ser visible, forzando al modelo a detectar la señal
-# temprana (2-3 meses antes del abandono total). La MDT mira 12 meses hacia
-# atrás desde aquí y el target `abandono_30d` es la misma etiqueta ground
-# truth — el modelo aprende a anticipar comercios que terminarán abandonando.
-FECHA_CORTE = "2026-01-01"
+# Con corte en 2026-01: churners tienen 4x menos transacciones que sanos
+# (ratio 4.08x) → el modelo lo aprende en 1 árbol → AUC 0.999 artificial,
+# best_iteration=1, probabilidades comprimidas en 0.48-0.52, ranking inútil.
+#
+# Con corte en 2025-11: el ratio baja a 1.91x — señal presente pero no trivial.
+# Solo ~33% de churners muestran 1 mes de decaimiento; el resto luce normal.
+# El modelo necesita múltiples árboles y combinar lags + features estáticos,
+# produciendo probabilidades con rango real y AUC realista (~0.80-0.88).
+FECHA_CORTE = "2025-11-01"
