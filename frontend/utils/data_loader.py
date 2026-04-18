@@ -32,7 +32,7 @@ def load_metrics() -> dict | None:
     path = _OUTPUTS_DIR / "model" / "metrics.json"
     if not path.exists():
         return None
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -51,5 +51,5 @@ def load_feature_columns() -> dict | None:
     path = _OUTPUTS_DIR / "model" / "feature_columns.json"
     if not path.exists():
         return None
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)

@@ -24,7 +24,7 @@ st.set_page_config(
 # Cargar CSS custom
 css_path = Path(__file__).parent / "assets" / "style.css"
 if css_path.exists():
-    st.markdown(f"<style>{css_path.read_text()}</style>", unsafe_allow_html=True)
+    st.markdown(f"<style>{css_path.read_text(encoding='utf-8')}</style>", unsafe_allow_html=True)
 
 
 def main():
@@ -32,7 +32,10 @@ def main():
     st.markdown(
         """
         <div class="header-container">
-            <h1>🔮 Churn Deuna</h1>
+            <h1 style="display: flex; align-items: center; gap: 12px; margin-bottom: 0;">
+                <img src="https://res.cloudinary.com/doy9vd3pj/image/upload/q_auto/f_auto/v1776540402/unnamed_ooahqu.png" width="45" style="border-radius: 8px;">
+                Churn Deuna
+            </h1>
             <p class="subtitle">Sistema predictivo de abandono de comerciantes B2B</p>
         </div>
         """,
