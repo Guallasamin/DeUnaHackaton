@@ -17,14 +17,6 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 import hashlib
-import sys
-from pathlib import Path
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from config.settings import PATHS
 
 # ============================================================
 # 1. CONFIGURACIÓN GLOBAL Y REPRODUCIBILIDAD
@@ -355,16 +347,10 @@ if __name__ == "__main__":
     df = generar_dim_merchants()
     validar_dataset(df)
 
-    # Guardar a CSV y Parquet dentro de data/raw
-    output_dir = PATHS.RAW_DIR
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    csv_path = output_dir / "dim_merchants.csv"
-    parquet_path = output_dir / "dim_merchants.parquet"
-
-    df.to_csv(csv_path, index=False, encoding="utf-8")
+    # Guardar a CSV y Parquet
+    df.to_csv("data/raw/dim_merchants.csv", index=False, encoding="utf-8")
     try:
-        df.to_parquet(parquet_path, index=False)
-        print(f"\n✓ Archivos guardados: {csv_path} y {parquet_path}")
+        df.to_parquet("data/raw/dim_merchants.parquet", index=False)
+        print("\n✓ Archivos guardados: data/raw/dim_merchants.csv y data/raw/dim_merchants.parquet")
     except Exception as e:
-        print(f"\n✓ Archivo guardado: {csv_path} (parquet no disponible: {e})")
+        print(f"\n✓ Archivo guardado: data/raw/dim_merchants.csv (parquet no disponible: {e})")
