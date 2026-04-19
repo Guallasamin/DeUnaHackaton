@@ -74,6 +74,13 @@ st.markdown("""
         padding: 10px 10px 0 10px;
         border-radius: 12px 12px 0 0;
         border-bottom: 1px solid #334155;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar {
+        display: none;
     }
     
     .stTabs [data-baseweb="tab"] {
@@ -227,12 +234,34 @@ with st.sidebar:
     st.divider()
     st.markdown("<p style='text-align: center; color: #64748B; font-size: 12px;'>D'Una Churn Intelligence v1.0</p>", unsafe_allow_html=True)
 
-# Lógica de filtrado
-df_filtered = df[
+# Lógica de filtrado base (Sidebar)
+mask_sidebar = (
     (df['region'].isin(selected_region)) & 
     (df['segmento_comercial'].isin(selected_segmento)) &
     (df['nivel_riesgo'].isin(selected_risk))
-]
+)
+
+# ==========================================
+# 3.5. FILTRO SUPERIOR MINIMALISTA (AÑO)
+# ==========================================
+anios_disponibles = sorted(list(set(df['mes_onboarding'].dropna().str[:4])), reverse=True)
+
+# Layout minimalista en la parte superior del contenido principal
+st.markdown("<div style='margin-bottom: 5px; margin-top: -15px;'><span style='color: #94A3B8; font-size: 14px; font-weight: 600;'>📅 Filtrar por Año de Onboarding (Cohorte)</span></div>", unsafe_allow_html=True)
+
+selected_year_onboarding = st.multiselect(
+    "Filtro Año Onboarding",
+    options=anios_disponibles,
+    default=[], # Vacío por defecto = todos
+    placeholder="Todos los años (selecciona para filtrar)...",
+    label_visibility="collapsed" # Minimalista sin etiqueta duplicada
+)
+
+# Aplicar el filtro final usando los primeros 4 caracteres (Año)
+if selected_year_onboarding:
+    df_filtered = df[mask_sidebar & (df['mes_onboarding'].str[:4].isin(selected_year_onboarding))]
+else:
+    df_filtered = df[mask_sidebar]
 
 # ==========================================
 # 4. TABS (VISTAS PRINCIPALES)
@@ -287,7 +316,7 @@ with tab1:
         
         # Ajustes estéticos del Donut Chart
         fig_pie.update_traces(
-            textposition='outside', 
+            textposition='auto', 
             textinfo='percent+label',
             textfont=dict(color='#E2E8F0', size=14),
             marker=dict(line=dict(color='#0B0F19', width=3)), # Borde del color del fondo principal para separar tajadas
@@ -322,7 +351,7 @@ with tab1:
             marker_color='#F97316', # Usamos el color de acento naranja principal
             marker_line_width=0, # Sin bordes en las barras
             texttemplate='%{text:.1%}', # Formato de porcentaje con 1 decimal
-            textposition='outside', # Texto fuera de la barra para legibilidad
+            textposition='auto', # Texto fuera de la barra o dentro si no hay espacio
             textfont=dict(color='#E2E8F0', size=13)
         )
         
@@ -333,7 +362,7 @@ with tab1:
             font=dict(color='#E2E8F0'),
             xaxis=dict(showgrid=False, visible=False), # Ocultamos completamente el eje X (ya tenemos los labels)
             yaxis=dict(showgrid=False, title="", tickfont=dict(size=13)),
-            margin=dict(t=50, b=20, l=10, r=40) # Margen derecho un poco más amplio para que quepan los porcentajes
+            margin=dict(t=50, b=20, l=10, r=20) # Reducido para celular, texto se adapta
         )
         st.plotly_chart(fig_bar, use_container_width=True)
 
@@ -617,15 +646,15 @@ with tab5:
                 }).sort_values(by="Impacto")
                 
                 fig_shap = px.bar(shap_df, x="Impacto", y="Driver", orientation='h', text_auto='.3f')
-                fig_shap.update_traces(marker_color='#F97316', width=0.4, textposition='outside', cliponaxis=False)
+                fig_shap.update_traces(marker_color='#F97316', width=0.4, textposition='auto', cliponaxis=False)
 
                 fig_shap.update_layout(
                     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                     font=dict(color="#E2E8F0"),
                     xaxis=dict(showgrid=True, gridcolor="#1E293B"),
                     yaxis=dict(showgrid=False, title=""),
-                    # 2. Aumentamos la 'r' (right) de 50 a 100
-                    margin=dict(t=20, b=20, l=10, r=100), 
+                    # Reducido margen derecho para no romper diseño en celular
+                    margin=dict(t=20, b=20, l=10, r=20), 
                     height=300
                 )
                 st.plotly_chart(fig_shap, use_container_width=True)

@@ -1,4 +1,4 @@
-"""🏠 Churn Deuna — Dashboard Ejecutivo 
+"""🏠 Churn Deuna — Dashboard Ejecutivo
 
 Landing page del dashboard de predicción de churn de comerciantes B2B.
 Muestra KPIs principales y navegación a las sub-páginas.
@@ -59,51 +59,29 @@ def main():
     alerta_amarilla = len(predictions[predictions["nivel_riesgo"] =="Medio" ])
     prob_media = predictions["probabilidad_churn"].mean()
 
-    col1, col2, col3, col4 = st.columns(4)
-
-    with col1:
-        st.markdown(
-            f"""
+    st.markdown(
+        f"""
+        <div class="kpi-grid">
             <div class="kpi-card">
                 <div class="kpi-value">{total:,}</div>
                 <div class="kpi-label">Comercios Scoreados</div>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with col2:
-        st.markdown(
-            f"""
             <div class="kpi-card kpi-danger">
                 <div class="kpi-value">{alerta_roja}</div>
                 <div class="kpi-label">🔴 Alerta Roja</div>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with col3:
-        st.markdown(
-            f"""
             <div class="kpi-card kpi-warning">
                 <div class="kpi-value">{alerta_amarilla}</div>
                 <div class="kpi-label">🟡 Alerta Amarilla</div>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with col4:
-        st.markdown(
-            f"""
             <div class="kpi-card">
                 <div class="kpi-value">{prob_media:.1%}</div>
                 <div class="kpi-label">Prob. Media de Churn</div>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     st.markdown("---")
 
@@ -131,40 +109,33 @@ def main():
     # ── Navegación ────────────────────────────────────────────────────────────
     st.markdown("### 🧭 Navega el Dashboard")
 
-    nav1, nav2, nav3 = st.columns(3)
-
-    with nav1:
-        st.markdown(
-            """
+    st.markdown(
+        """
+        <div class="nav-grid">
             <div class="nav-card">
-                <h3>📊 Dashboard</h3>
-                <p>Distribución de segmentos, análisis por región y MCC, top comercios en riesgo.</p>
+                <h3>📊 Resumen</h3>
+                <p>Panel Ejecutivo de Riesgo de Abandono y KPIs principales a 30 días.</p>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with nav2:
-        st.markdown(
-            """
             <div class="nav-card">
-                <h3>🔍 Explorador</h3>
-                <p>Busca un comercio específico y analiza sus razones de riesgo con SHAP.</p>
+                <h3>📅 Cohortes</h3>
+                <p>Evolución de la probabilidad de abandono según mes de onboarding.</p>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with nav3:
-        st.markdown(
-            """
             <div class="nav-card">
-                <h3>📈 Modelo</h3>
-                <p>Métricas detalladas, distribución de probabilidades y gráficos SHAP globales.</p>
+                <h3>💼 Inteligencia</h3>
+                <p>Workspace de Retención con sugerencias de Next Best Action.</p>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
+            <div class="nav-card">
+                <h3>🗺️ Geoespacial</h3>
+                <p>Identificación de focos geográficos con alta concentración de riesgo.</p>
+            </div>
+            <div class="nav-card">
+                <h3>🔍 Perfil Profundo</h3>
+                <p>Radiografía individual y principales drivers de abandono (SHAP).</p>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     # ── Footer ────────────────────────────────────────────────────────────────
     st.markdown("---")
