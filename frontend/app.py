@@ -5,7 +5,7 @@ Muestra KPIs principales y navegación a las sub-páginas.
 """
 import sys
 from pathlib import Path
-
+import pandas as pd
 import streamlit as st
 
 # Asegurar imports del proyecto
@@ -16,7 +16,7 @@ from frontend.utils.data_loader import load_predictions, load_metrics
 # ── Configuración de la página ────────────────────────────────────────────────
 st.set_page_config(
     page_title="Churn Deuna — Dashboard",
-    page_icon="🔮",
+    page_icon="💸",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -55,8 +55,8 @@ def main():
 
     # ── KPIs principales ─────────────────────────────────────────────────────
     total = len(predictions)
-    alerta_roja = len(predictions[predictions["segmento_churn"] == "ALERTA_ROJA"])
-    alerta_amarilla = len(predictions[predictions["segmento_churn"] == "ALERTA_AMARILLA"])
+    alerta_roja = len(predictions[predictions["nivel_riesgo"].isin(["Crítico","Alto"])])
+    alerta_amarilla = len(predictions[predictions["nivel_riesgo"] =="Medio" ])
     prob_media = predictions["probabilidad_churn"].mean()
 
     col1, col2, col3, col4 = st.columns(4)
@@ -109,11 +109,21 @@ def main():
 
     # ── Métricas del modelo (si existen) ──────────────────────────────────────
     if metrics:
-        st.markdown("### 📊 Rendimiento del Modelo")
+        # Usualmente en los dashboards mostramos el rendimiento de 'test' o 'val'
+        st.markdown("### 📊 Rendimiento del Modelo (Test)")
+        
+        # 1. Extraemos el diccionario de métricas de test para no repetir código
+        test_metrics = metrics.get("splits", {}).get("test", {})
+        
+        # 2. Creamos las 4 columnas
         m1, m2, m3, m4 = st.columns(4)
-        m1.metric("AUC-ROC", f"{metrics.get('auc', 0):.3f}")
-        m2.metric("AUC-PR", f"{metrics.get('pr_auc', 0):.3f}")
-        m3.metric("F1 Score", f"{metrics.get('f1', 0):.3f}")
+        
+        # 3. Llenamos las 3 primeras sacando los datos de 'test_metrics'
+        m1.metric("AUC-ROC", f"{test_metrics.get('auc_roc', 0):.3f}")
+        m2.metric("AUC-PR", f"{test_metrics.get('auc_pr', 0):.3f}")
+        m3.metric("F1 Score", f"{test_metrics.get('f1', 0):.3f}")
+        
+        # 4. Llenamos la 4ta sacando el dato directamente de 'metrics' (la raíz)
         m4.metric("Umbral F1", f"{metrics.get('threshold', 0):.3f}")
 
     st.markdown("---")
